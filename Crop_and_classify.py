@@ -110,8 +110,11 @@ def Crop_image(image):
                 Y_mid = startY + int(abs(endY - startY) / 2)
                 cropped_region = output[startY:endY, startX:endX]
                 resized = cv2.resize(cropped_region,dsize=(224,224),interpolation=cv2.INTER_CUBIC)
-                resized = np.transpose(resized,(2,0,1))
-                img_list.append(torch.from_numpy(resized).float())
+                normalized = resized / 255
+                normalized = (normalized - 0.5)*2
+                resized = np.transpose(normalized,(2,0,1))
+                cur_res = torch.from_numpy(resized).float()
+                img_list.append(cur_res)
             return img_list
             # vs.stop()
 
@@ -211,8 +214,7 @@ def get_representation(model, input):
   return label_pred.cpu().numpy()
 
 """
-example)
-img = cv2.imread('1426127455_0HGfZ1wc_P.jpg')
+img = cv2.imread('1627700379_CR-cVNrhyCk.jpg')
 res = get_representation(resnet50, Crop_image(img))
 print(res)
 """
