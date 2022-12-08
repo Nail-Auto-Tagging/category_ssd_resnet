@@ -109,8 +109,13 @@ def Crop_image(image):
                 X_mid = startX + int(abs(endX - startX) / 2)
                 Y_mid = startY + int(abs(endY - startY) / 2)
                 cropped_region = output[startY:endY, startX:endX]
-                resized = cv2.resize(cropped_region,dsize=(224,224),interpolation=cv2.INTER_CUBIC)
-                normalized = resized / 255
+                resized = cv2.resize(cropped_region,dsize=(224,224),interpolation=cv2.INTER_LINEAR)
+                tmp = cv2.cvtColor(resized,cv2.COLOR_BGR2GRAY)
+                adjusted = np.zeros_like(resized)
+                adjusted[:,:,0] = tmp
+                adjusted[:,:,1] = tmp
+                adjusted[:,:,2] = tmp
+                normalized = adjusted / 255
                 normalized = (normalized - 0.5)*2
                 resized = np.transpose(normalized,(2,0,1))
                 cur_res = torch.from_numpy(resized).float()
@@ -195,26 +200,28 @@ class ResNet(nn.Module):
         x = self.fc(x)
         return x
 
-color = ['multi','red','orange','yellow',
-        'nude','pink','green','skyblue','navy','purple','black','white','silver']
+category = [
+    'glitter','french','gradation','parts','marble','pattern','resin',
+    'check','powder','onetone','cheek','syrup','character'
+]
 
-num_classes = len(color)
-resnet50 = ResNet(resnet.Bottleneck, [3, 4, 6, 3], num_classes).to(device) 
-resnet50 = torch.load('./resnet50_224.pt')
-
-def get_representation(model, input):
+def get_category(model, input):
+      
   model.eval()
-  outputs = []
+  Sig = torch.nn.Sigmoid()
   input = torch.stack(input,dim=0)
   with torch.no_grad():
     input = input.to(device)
-    y_pred = model(input)
-    _, label_pred = torch.max(y_pred.data, 1)
-    outputs.append(y_pred.cpu())
-  return label_pred.cpu().numpy()
+    with torch.autocast('cuda'):
+        output_regular = Sig(model(input).float()).cpu()
+                  
+  output_regular = np.array(output_regular)
+  #output_regular = (output_regular > 0.5)
+  return output_regular
 
-"""
-img = cv2.imread('1627700379_CR-cVNrhyCk.jpg')
-res = get_representation(resnet50, Crop_image(img))
+img = cv2.imread('1450356904__ZMf0SOkNE.jpg')
+imgs = Crop_image(img)
+resnet50 = ResNet(resnet.Bottleneck, [3, 4, 6, 3], len(category)).to(device) 
+torch.load('resnet50_category.pt')
+res = get_category(resnet50, imgs)
 print(res)
-"""
