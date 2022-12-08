@@ -216,7 +216,7 @@ def get_category(model, input):
         output_regular = Sig(model(input).float()).cpu()
                   
   output_regular = np.array(output_regular)
-  #output_regular = (output_regular > 0.5)
+  output_regular = (output_regular > 0.5)
   return output_regular
 
 img = cv2.imread('1450356904__ZMf0SOkNE.jpg')
