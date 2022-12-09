@@ -222,6 +222,6 @@ def get_category(model, input):
 img = cv2.imread('1450356904__ZMf0SOkNE.jpg')
 imgs = Crop_image(img)
 resnet50 = ResNet(resnet.Bottleneck, [3, 4, 6, 3], len(category)).to(device) 
-torch.load('resnet50_category.pt')
+torch.load('./category_model/v1/resnet50_categories_v1_20.pt')
 res = get_category(resnet50, imgs)
 print(res)
